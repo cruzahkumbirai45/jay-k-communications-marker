@@ -2,63 +2,90 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import Logo from '../components/Logo'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
-import Link from 'next/link'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default function Login() {
+export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const router = useRouter()
-  const { toast } = useToast()
-  const supabase = createClientComponentClient()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
+    setError('')
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       })
-    } else {
-      router.push('/dashboard')
+
+      if (response.ok) {
+        const data = await response.json()
+        // Store the token in localStorage or a secure cookie
+        localStorage.setItem('token', data.token)
+        router.push('/workspace')
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Login failed')
+      }
+    } catch (error) {
+      setError('An error occurred. Please try again.')
     }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-[350px]">
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleLogin}>
+    <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <Card>
+          <CardHeader>
+            <Logo />
+            <CardTitle className="text-center text-2xl font-extrabold">
+              JayK Communications
+            </CardTitle>
+            <CardDescription className="text-center">
+              Marketing Team Login
+            </CardDescription>
+          </CardHeader>
           <CardContent>
-            <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <Label htmlFor="email">Email address</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
-              <div className="flex flex-col space-y-1.5">
+              <div>
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
-            </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              <Button type="submit" className="w-full">
+                Sign in
+              </Button>
+            </form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
-            <Button type="submit" className="w-full">Login</Button>
-            <Link href="/register" className="text-sm text-blue-600 hover:underline">
-              Don't have an account? Register
-            </Link>
-          </CardFooter>
-        </form>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

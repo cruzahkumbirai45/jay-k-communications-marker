@@ -1,12 +1,12 @@
 import './globals.css'
+import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata = {
-  title: 'JayK Communications Marketing System',
-  description: 'Remote marketing team management system',
+export const metadata: Metadata = {
+  title: 'JayK Communications - Marketing Team Portal',
+  description: 'Work from home portal for JayK Communications marketing team',
 }
 
 export default function RootLayout({
@@ -16,10 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        {children}
-        <Toaster />
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }
